@@ -1,24 +1,11 @@
 let myRequest = 'https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json'
-dataset = [];
 
-fetch(myRequest)
-  .then(response => {
-    if(response.status === 200) {
-      return response.json()
-    } else {
-      throw new Error('oops')
-    }
-  })
-  .then(response => {
-    console.log(response)
-    plot(response)
-  })
-
-const h = 400
-const w = 800 
-const p = 30
+const h = 600
+const w = 1200 
+const p = 45
 
 const colors = [
+  {number: 0, color: "blue"},
   {number: 1, color: "#04007C"},
   {number: 2, color: "#0016A8"},
   {number: 3, color: "#0060CE"},
@@ -29,7 +16,8 @@ const colors = [
   {number: 8, color: "#A8763E"},
   {number: 9, color: "#A8763E"},
   {number: 10, color: "#6F1A07"},
-  {number: 11, color: "#540000"}
+  {number: 11, color: "#540000"},
+  {number: 12, color: "black"}
 ]
 
 const svg = d3.select('body')
@@ -49,21 +37,40 @@ const xScale = d3.scaleLinear()
                  .range([p, w - p])
                 
 const yScale = d3.scaleLinear()
-                 .domain([1, 12])
+                 .domain([1, 13])
                  .range([p, h - p])
                  
                  
 const colorScale = d3.scaleLinear()
                      .domain([-6.976, 5.228])
                      .range([1, 12])
-               
+                     
+const xAxis = d3.axisBottom(xScale)
+
+const yAxis = d3.axisLeft(yScale)
+
+
+fetch(myRequest)
+  .then(response => {
+    if(response.status === 200) {
+      return response.json()
+    } else {
+      throw new Error('oops')
+    }
+  })
+  .then(response => {
+    console.log(response)
+    plot(response)
+  })               
 
 getColor = (variance) => {
-  let scale = colorScale(variance)
-  //map scale to colors arr
-  //return corresponding #hex
+  const scale = colorScale(variance)
+  const trunc = Math.trunc(scale)
+  const test = colors.filter(color => color.number === trunc)
+  return test[0].color
 }
-    
+// 
+// console.log(getColor(4))
 
 plot = (response) => {
                             
@@ -77,9 +84,9 @@ plot = (response) => {
     .attr('fill', (d) => { 
     
     })
-    .attr('height', (d) => yScale(1.2))
+    .attr('height', (d) => yScale(1))
     .attr('width', (d) => 5 )
-    .attr("fill", "pink")
+    .attr("fill", (d) => getColor(d.variance))
     .on('mouseover', (d) => {
       div.transition()
          .duration(100)
@@ -98,4 +105,13 @@ plot = (response) => {
          .duration(100)
          .style('opacity', 0)
     })
+    
+    svg.append('g')
+      .attr('class', 'x-axis')
+      .attr('transform', 'translate(0, '+ h + ')')
+      .call(xAxis)
+      
+    svg.append('g')
+      .attr('class', 'y-axis')
+      .call(yAxis)
 }
